@@ -25,28 +25,30 @@ export default class TomatoClock extends React.Component {
 
   handlebreakAdd = () => {
     if (this.state.break[1] < 59) {
-      let temp = this.state.break[1] += 1;
-      this.setState(
-        { break: ['break', temp] }
+      this.setState( (prevState)=>{
+        return {
+          break: prevState.state.break[1]+1
+        }
+      }
       )
     }
   }
   handlebreakSub = () => {
     if (this.state.break[1] > 0) {
-      this.setState({ break: ['break', (this.state.break[1] -= 1)] })
+      this.setState({ break: ['break', (this.state.break[1] - 1)] })
 
     }
 
   }
   handlesessionAdd = () => {
     if (this.state.session[1] < 59) {
-      this.setState({ session: ['session', (this.state.session[1] += 1)] });
+      this.setState({ session: ['session', (this.state.session[1] + 1)] });
       this.updateTimer(this.state.session[1]);
     }
   }
   handlesessionSub = () => {
     if (this.state.session[1] > 0) {
-      this.setState({ session: ['session', (this.state.session[1] -= 1)] });
+      this.setState({ session: ['session', (this.state.session[1] - 1)] });
       this.updateTimer(this.state.session[1]);
     }
   }
@@ -54,7 +56,7 @@ export default class TomatoClock extends React.Component {
   countDown = () => {
     let time = this.state.session[1] * 60;
     console.log(time);
-    setInterval(this.updateTimer(time), 1000);
+    setInterval(this.updateTimer(), 1000);
     time--;
     console.log(time);
     this.updateTimer(time);
