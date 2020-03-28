@@ -15,7 +15,8 @@ export default class TomatoClock extends React.Component {
 
   }
   updateTimer = (time) => {
-    let innerTime = time * 60;
+    let innerTime;
+    innerTime = time > 60 ? innerTime : time;
     let min = Math.floor(innerTime / 60);
     let second = innerTime % 60;
     let secondShow = second === 0 ? '00' : toString(second);
@@ -51,7 +52,7 @@ export default class TomatoClock extends React.Component {
   }
 
   countDown = () => {
-    let time = this.state.session[1];
+    let time = this.state.session[1] * 60;
     console.log(time);
     setInterval(this.updateTimer(time), 1000);
     time--;
