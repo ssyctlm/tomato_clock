@@ -10,23 +10,22 @@ export default class Countdown extends Component{
     }
   }
   selfDecrement=()=>{
-    if(this.state.min<=0){ 
+    if(this.state.min===0 && this.state.sec ===0 ){ 
       this.stopDownClock()
     }
     else{
-      if(this.state.sec === 0){
+      if(this.state.sec === 0 ){
         this.setState({min:this.state.min-1,sec:59})
       }else{
         this.setState({sec:this.state.sec-1})
       }
-
     }
   }
 
   startDownClock = ()=>{
     if(this.state.IntervalId){ return }
     else{
-      const IntervalId = setInterval(()=>{this.selfDecrement()}, 1000);
+      const IntervalId = setInterval(()=>{this.selfDecrement()}, 10);
       this.setState({IntervalId:IntervalId});
     }
     }
