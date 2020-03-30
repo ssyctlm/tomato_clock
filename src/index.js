@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-
+import Countdown from './components/countdown'
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Countdown />
   </React.StrictMode>,
   document.getElementById('root')
 );
