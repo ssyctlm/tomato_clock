@@ -7,24 +7,26 @@ export default class TomatoClock extends React.Component {
     super(props);
     this.state = {
       breakLength: 5,
-      sessionLength:5,
+      sessionLength:25,
       IntervalId:null,
-      timerMin:5,
+      timerMin:25,
       timerSec:0,
       isPlay:false,
-      isBreak: false
+      isBreak: false,
+      timerTitle:'session',
+      beep:"https://goo.gl/65cBl1",
     }
   }
   
   handleChange = (returnKey,returnVal)=>{
     if(this.state.isPlay){return};
-    if(returnKey==="sessionLength" && this.state.timerSec === 0){
+    if(returnKey==="sessionLength"){
       if(returnVal<=0){
         returnVal = 1;
       }else if(returnVal>=60){
         returnVal = 60;
       }
-      this.setState({[returnKey]:returnVal , timerMin:returnVal})
+      this.setState({[returnKey]:returnVal , timerMin:returnVal, timerSec:0})
     }else{
       if(returnVal<=0){
         returnVal = 1;
@@ -41,7 +43,9 @@ export default class TomatoClock extends React.Component {
     let tempMin = this.state.sessionLength;
     this.setState(
       {timerMin:tempMin,timerSec:0}
-    )
+    );
+    this.audioBeep.pause();
+    this.audioBeep.currentTime = 0;
   };
 
   handleStop=()=>{
@@ -51,63 +55,45 @@ export default class TomatoClock extends React.Component {
   }
 
   handleStart = ()=>{
-    if(this.state.IntervalId){return};
+    if(this.state.IntervalId || this.state.isPlay){return};
     let returnId = setInterval(()=>{
-      this.selfDecrement()
-    },300)
+      this.selfDecrement(this.state.sessionLength)
+    },1000)
     this.setState({IntervalId:returnId,isPlay:true})
   }
 
-  selfDecrement =()=>{
-    switch(this.state.isBreak){
-      case true:
-        this.setState({timerMin:this.state.breakLength})
-        if(this.state.timerMin===0 && this.state.timerSec===0){
-          clearInterval(this.state.IntervalId);
-          this.setState({IntervalId:null,isplay:false,isBreak:!this.state.isBreak})
-        }else{
-          if(this.state.timerSec===0){
-            this.setState({timerMin:this.state.timerMin-1, timerSec:59})
-          }else{
-            this.setState({
-              timerSec:this.state.timerSec-1
-            })
-          }
-        }
-        break;
-      case false:
-        case true:
-          this.setState({timerMin:this.state.sessionLength})
-          if(this.state.timerMin===0 && this.state.timerSec===0){
-            clearInterval(this.state.IntervalId);
-            this.setState({IntervalId:null,isplay:false,isBreak:!this.state.isBreak})
-          }else{
-            if(this.state.timerSec===0){
-              this.setState({timerMin:this.state.timerMin-1, timerSec:59})
-            }else{
-              this.setState({
-                timerSec:this.state.timerSec-1
-              })
-            }
-          }
-        break;
+  handleToggler = ()=>{
+    if(this.state.isPlay){
+      this.handleStop()
+    }else{
+      this.handleStart()
     }
   }
+
+  handleBeep=()=>{
+    this.audioBeep.play();
+  }
   //!! before to achieve toggle break and session function
-// selfDecrement=()=>{
-//   if(this.state.timerMin===0 && this.state.timerSec===0){
-//     clearInterval(this.state.IntervalId);
-//     this.setState({IntervalId:null,isplay:false,isBreak:!this.state.isBreak})
-//   }else{
-//     if(this.state.timerSec===0){
-//       this.setState({timerMin:this.state.timerMin-1, timerSec:59})
-//     }else{
-//       this.setState({
-//         timerSec:this.state.timerSec-1
-//       })
-//     }
-//   }
-// }
+  selfDecrement=()=>{
+    if(this.state.timerMin===0 && this.state.timerSec===0){
+      // clearInterval(this.state.IntervalId);
+      this.setState({isBreak:!this.state.isBreak});
+      this.handleBeep();
+      if(this.state.isBreak){
+        this.setState({timerMin:this.state.breakLength,timerSec:0,timerTitle:'break'})
+      }else{
+        this.setState({timerMin:this.state.sessionLength,timerSec:0,timerTitle:'session'})
+      }
+    }else{
+      if(this.state.timerSec===0){
+        this.setState({timerMin:this.state.timerMin-1, timerSec:59})
+      }else{
+        this.setState({
+          timerSec:this.state.timerSec-1
+        })
+      }
+    }
+  }
 
 
 
@@ -121,22 +107,29 @@ export default class TomatoClock extends React.Component {
           <Breakadjustor
           break = {this.state.breakLength}
           onChange = {this.handleChange}
+          isPlay = {this.state.isPlay}
           />
           <Sessionjustor
           session = {this.state.sessionLength}
           onChange = {this.handleChange}
+          isPlay = {this.state.isPlay}
           />
           <Timer
+          title = {this.state.timerTitle}
           break = {this.state.breakLength}
           session = {this.state.sessionLength}
           stateMin = {this.state.timerMin}
           stateSec = {this.state.timerSec}
           stateIntervalId = {this.state.IntervalId}
+          beep = {this.state.beep}
           handleReset = {this.handleReset}
           handleStop = {this.handleStop}
           handleStart = {this.handleStart}
+          handleToggler = {this.handleToggler}
+          handleBeep = {this.handleBeep}
           />
         </div>
+        <audio preload="auto" src="https://www.freesoundslibrary.com/wp-content/uploads/2017/10/buzzer-sound.mp3" id="beep" ref={(audio)=>{this.audioBeep= audio}}></audio>
       </div>
     )
   }
@@ -145,28 +138,30 @@ export default class TomatoClock extends React.Component {
 
 
 function Breakadjustor(props){
+  let classchange = props.isPlay? 'btn btn_cursor' : 'btn';
   return(
     <div className="adjust-box">
       <h4 id="break-label">Break Length</h4>
       <div className="controller">
-        <input className="btn" type="button" value="+" onClick={()=>{props.onChange('breakLength',props.break+1)}} />
-        <p>{props.break}</p>
-        <input className="btn" type="button" value="-" onClick={()=>{props.onChange('breakLength',props.break-1)}} />
+        <input className={classchange} type="button" value="+" id="break-increment" onClick={()=>{props.onChange('breakLength',props.break+1)}} />
+        <p id="break-length">{props.break}</p>
+        <input className={classchange} type="button" value="-" id="break-decrement" onClick={()=>{props.onChange('breakLength',props.break-1)}} />
       </div>
     </div>
   )
 }
 
 function Sessionjustor(props){
+  let classchange = props.isPlay? 'btn btn_cursor' : 'btn';
   return(
     <div className="adjust-box">
       <h4 id="session-label">Session Length</h4>
       <div className="controller">
-        <input className="btn" type="button" value="+"
-          onClick={()=>{props.onChange('sessionLength',props.session+1)}} />
-        <p>{props.session}</p>
-        <input className="btn" type="button" value="-"
-          onClick={()=>{props.onChange('sessionLength',props.session-1)}} />
+        <input className={classchange} type="button" value="+"
+          id="session-increment" onClick={()=>{props.onChange('sessionLength',props.session+1)}} />
+        <p id="session-length">{props.session}</p>
+        <input className={classchange} type="button" value="-"
+          id="session-decrement" onClick={()=>{props.onChange('sessionLength',props.session-1)}} />
       </div>
     </div>
   )
@@ -182,14 +177,15 @@ function Timer(props){
   return(
     <div className="display-panel">
     <div className="switchs">
-      <button className="btn" title="start" onClick={()=>{props.handleStart()}} >></button>
-      <button className="btn" title="pause" onClick={()=>{props.handleStop()}}>||</button>
+      <button className="btn" id="start_stop" title="start" onClick={()=>{props.handleToggler()}} >></button>
+      <button className="btn" title="pause" onClick={()=>{props.handleToggler()}}>||</button>
       <button className="btn" title="restart" onClick={()=>{props.handleReset()}}>O</button>
     </div>
     <div className="dail">
-      <h4>Session</h4>
-  <p style={low}>{min}:{sec===0? '00': sec<10? `0${sec}`: sec}</p>
+      <h4 id="timer-label">{props.title}</h4>
+      <p style={low} id="time-left">{min<10? `0${min}`: min}:{sec<10? `0${sec}`: sec}</p>
     </div>
+
   </div>
   )
 }
